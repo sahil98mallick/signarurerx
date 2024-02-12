@@ -251,3 +251,46 @@ html {
   width: 100%;
   border-radius: 20px;
 }
+
+
+.dialogsetupdesign {
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.medicinebox {
+  background-color: rgb(239, 243, 245);
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  padding: 10px;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.medicinedescriptiondesign {
+  width: 500px;
+  height: auto;
+  padding-bottom: 10px;
+  /* background-color: #6B96F8; */
+}
+
+
+@media only screen and (max-width: 800px) {
+  .details-subsection {
+    flex-direction: column;
+  }
+
+  .detail-lists {
+    width: 90%;
+  }
+
+  .mapview {
+    width: 100%;
+  }
+
+  .loginbox {
+    width: 350px;
+  }
+}

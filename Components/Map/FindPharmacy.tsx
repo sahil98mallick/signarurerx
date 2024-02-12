@@ -1,4 +1,4 @@
-import { Box, Button, Card, TextField, Typography } from '@mui/material';
+import { Box, Button, Card, Dialog, DialogContent, DialogContentText, DialogTitle, TextField, Typography } from '@mui/material';
 import * as React from 'react';
 import MedicalInformationIcon from '@mui/icons-material/MedicalInformation';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -11,23 +11,15 @@ import { useThemeContext } from '@/muitheme/ThemeContextProvider';
 import Link from 'next/link';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import { useQuery } from 'react-query';
-import { fetchid } from '@/api/functions/Fetchprescriptionid';
 import { FindPharmacyInterface, PharmacyListsInterface } from '@/typescripts/interfaces/Findpharmacy.interface';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { FindPharmacyFunc } from '@/api/functions/Findpharmacy';
 import { Icon } from 'leaflet';
 import { useRouter } from 'next/router';
+import { fetchpatientdetails } from '@/api/functions/FetchPatientDetails';
+import { Medicine, PatientDetails } from '@/typescripts/interfaces/Fetchpatient.interface';
+import { Bounds, MapEventsProps } from '@/typescripts/interfaces/Mapinterface';
 
-interface Bounds {
-    south: number;
-    west: number;
-    north: number;
-    east: number;
-}
-
-interface MapEventsProps {
-    updateBounds: () => void;
-}
 
 const MapEvents: React.FC<MapEventsProps> = ({ updateBounds }) => {
     useMapEvents({
@@ -46,6 +38,15 @@ const FindPharmacy: React.FC = () => {
     const { mode } = useThemeContext();
     const router = useRouter();
     const { slug } = router?.query;
+    const [open, setOpen] = React.useState(false);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
     const wrapperStyles: React.CSSProperties = {
         color: mode === 'dark' ? '#2C3E50' : '#2C3E50',
         background: mode === 'dark' ? '#606060' : 'rgb(245, 248, 250)',
@@ -103,13 +104,27 @@ const FindPharmacy: React.FC = () => {
         return <MapEvents updateBounds={updateBounds} />;
     };
 
+
+    // fetch patient Details
+    const { data: patientdetails, isLoading: patientdetailsloading, isError: fetchpatientdetailserror } = useQuery({
+        queryKey: ["patientdetails", { slug }],
+        queryFn: () => fetchpatientdetails(slug),
+        enabled: !!slug
+    })
+
+    console.log("patinet Details:", patientdetails);
+
+
     React.useEffect(() => {
         setPharmacy({
             ...pharmacy,
             mapBoundary: bounds
         });
     }, [fetchpharmacylists]);
-
+    const [selectedItem, setSelectedItem] = React.useState<PharmacyListsInterface | null>(null);
+    const handleItemClick = (item: PharmacyListsInterface) => {
+        setSelectedItem(item);
+    };
     return (
         <>
             <Card className="details-subsection" sx={wrapperStyles}>
@@ -129,12 +144,12 @@ const FindPharmacy: React.FC = () => {
                                 </Typography>
                             </Box>
                             <Box>
-                                <Button variant='outlined' color='secondary'>View</Button>
+                                <Button variant='outlined' color='secondary' onClick={handleClickOpen}>View</Button>
                             </Box>
                         </Card>
                         <Box className="searchpostcode">
                             <TextField
-                                type="password"
+                                type="text"
                                 placeholder='Enter Postcode / City / Others' style={{ width: "95%", border: "none", boxShadow: "-5px 5px 15px -3px rgba(0,0,0,0.1)" }}
                             />
                         </Box>
@@ -198,6 +213,63 @@ const FindPharmacy: React.FC = () => {
                     </MapContainer>
                 </Box>
             </Card>
+
+            {/* Dialog Interface */}
+            {
+                patientdetailsloading ? (
+                    <></>
+                ) : (
+                    <>
+                        <Dialog
+                            open={open}
+                            onClose={handleClose}
+                            aria-labelledby="responsive-dialog-title"
+                            className='dialogsetupdesign'
+                        >
+                            <DialogTitle id="responsive-dialog-title">
+                                {"Patient Details"}
+                            </DialogTitle>
+                            <DialogContent>
+                                <DialogContentText>
+                                    <Box>
+                                        <Typography variant='body1' gutterBottom>Created At: {patientdetails?.created_at}</Typography>
+                                        <Typography variant='body1' gutterBottom>Patient Name: {patientdetails?.patient.name}</Typography>
+                                        <Box>
+                                            <Box className="medicinedescriptiondesign">
+                                                {
+                                                    patientdetails?.medicines?.map((item: Medicine, index: number | undefined) => {
+                                                        return (
+                                                            <>
+                                                                <Box className='medicinebox'>
+                                                                    <Typography variant='body1' gutterBottom>
+                                                                        Description: {item?.description}
+                                                                    </Typography>
+                                                                    <Typography variant='body1' gutterBottom>
+                                                                        Quantity: {item?.qty}
+                                                                    </Typography>
+                                                                    <Typography variant='body1' gutterBottom>
+                                                                        Direction: {item?.directions}
+                                                                    </Typography>
+                                                                    <Typography variant='body1' gutterBottom>
+                                                                        Price Per Tablet: {item?.pricePerTablet}
+                                                                    </Typography>
+                                                                    <Typography variant='body1' gutterBottom>
+                                                                        Total Price: {item?.totalPrice}
+                                                                    </Typography>
+                                                                </Box>
+                                                            </>
+                                                        )
+                                                    })
+                                                }
+                                            </Box>
+                                        </Box>
+                                    </Box>
+                                </DialogContentText>
+                            </DialogContent>
+                        </Dialog>
+                    </>
+                )
+            }
         </>
     );
 };

@@ -13,6 +13,7 @@ import Axiosinstance from "@/api/axiosinstance/Axiosinstance";
 import { fetchid } from "@/api/functions/Fetchprescriptionid";
 import { toast } from "react-toastify";
 import { Idvalidate } from "@/api/functions/VallidateId";
+import { FadeLoader, PulseLoader } from "react-spinners";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,12 +29,15 @@ export default function Home() {
   };
   // Form Setup and Render
   const router = useRouter()
+  const [pidloading, setPidloading] = React.useState(false)
+  const [dobloading, setDobloading] = React.useState(false)
   const { register, handleSubmit, formState: { errors } } = useForm<PrecriptionInputs>();
   const [showPrescriptionForm, setShowPrescriptionForm] = React.useState(true);
   const [showDobForm, setShowDobForm] = React.useState(false);
   const [presid, setpresid] = React.useState("");
 
   const onSubmitPrescriptionId = async (data: PrecriptionInputs) => {
+    setPidloading(true)
     try {
       console.log("prescription id:-", data);
       const response = await fetchid(data.prescriptionId)
@@ -43,10 +47,13 @@ export default function Home() {
         setShowDobForm(true);
         toast.success(`Prescription Id: ${data.prescriptionId}  verified`)
       } else {
-        toast.success(`Prescription Id: ${data.prescriptionId} not valid`)
+        toast.error(`Prescription Id: ${data.prescriptionId} not valid`)
       }
     } catch (error) {
       console.log(error);
+      toast.error("Prescription ID is invalid")
+    } finally {
+      setPidloading(false)
     }
   };
 
@@ -58,6 +65,7 @@ export default function Home() {
     };
     data.dateOfBirth = formatToDayMonthYear(data.dateOfBirth);
     console.log("Prescription Id and dob:-", data);
+    setDobloading(true)
     try {
       const response = await Idvalidate(data)
       // console.log("validate Dob:-", response?.data);
@@ -65,9 +73,14 @@ export default function Home() {
         toast.success(`DoB For Prescription Id: - ${data.prescriptionId} Verified`)
         // router.push(`/${data.prescriptionId}`)
         router.push(`/findpharmacypage/${data.prescriptionId}`)
+      }else{
+        toast.error("Date of birth is incorrect")
       }
     } catch (error) {
-
+      console.log("Error Found for Dob:-", error);
+      toast.error("Date of birth is incorrect")
+    } finally {
+      setDobloading(false)
     }
   };
   return (
@@ -92,9 +105,20 @@ export default function Home() {
                   style={{ width: "100%", borderRadius: "20px" }}
                   {...register("prescriptionId")}
                 />
-                <Button type="submit" variant="contained" size="small" className="submitbutton" color="primary">
-                  Submit
-                </Button>
+                {
+                  pidloading ? (
+                    <><Button type="submit" variant="contained" size="small" className="submitbutton" color="primary" disabled>
+                      Loading... <PulseLoader
+                        color="#36d7b7"
+                        size={10}
+                      />
+                    </Button></>
+                  ) : (
+                    <><Button type="submit" variant="contained" size="small" className="submitbutton" color="primary">
+                      Submit
+                    </Button></>
+                  )
+                }
               </Box>
             </Box>
           </form>
@@ -124,9 +148,20 @@ export default function Home() {
                   style={{ width: "100%", borderRadius: "20px" }}
                   {...register("dateOfBirth", { required: true })}
                 />
-                <Button type="submit" variant="contained" size="large" className="submitbutton" color="primary">
-                  Enter DoB
-                </Button>
+                {
+                  dobloading ? (
+                    <><Button type="submit" variant="contained" size="large" className="submitbutton" color="primary" disabled>
+                      Loading... <PulseLoader
+                        color="#36d7b7"
+                        size={10}
+                      />
+                    </Button></>
+                  ) : (
+                    <><Button type="submit" variant="contained" size="large" className="submitbutton" color="primary">
+                      Enter DoB
+                    </Button></>
+                  )
+                }
               </Box>
             </Box>
           </form>

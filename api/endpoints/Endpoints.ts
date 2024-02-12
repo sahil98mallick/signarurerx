@@ -9,5 +9,8 @@ export const Endpoints = {
     },
     findpharmacy: {
         pharmacy: "api/pharmacy/find/by-prescription"
+    },
+    details:{
+        patientdetails:"api/prescription/detail"
     }
 }

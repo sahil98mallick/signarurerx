@@ -17,8 +17,7 @@ const Wrapper = (props: wrapperProps) => {
         Height: 'auto',
         display: 'flex',
         flexDirection: 'column',
-        width: '100%',
-        
+        width: '100%', 
     };
     return (
         <>
